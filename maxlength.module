@@ -95,7 +95,6 @@ function _maxlength_limit_body() {
     if (arg(2) == 'edit') {
       $nid = intval(arg(1));
       
-      // TODO: there must be a better way, current node object should be loaded already
       return variable_get(MAXLENGTH_NODE_TYPE . _maxlength_node_type_from_id($nid) . '_limit', 0) == 1;
     }
   }
@@ -132,7 +131,9 @@ function theme_maxlength_textarea($element) {
 }
 
 function _maxlength_node_type_from_id($nid) {
-  return db_result(db_query('SELECT type FROM {node} WHERE nid=%d', $nid));
+  $node = node_load($nid);
+  
+  return $node->type;
 }
 
 // hook_nodeapi
