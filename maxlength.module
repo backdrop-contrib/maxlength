@@ -10,7 +10,7 @@ function maxlength_perm() {
 
 // hook_help
 function maxlength_help($section) {
-  switch($section) {
+  switch ($section) {
     case 'admin/help#maxlength':
     case 'admin/modules#description':
       return t('Sets a maximum length for body fields and shows a counter that is updated as you type.');
@@ -23,7 +23,8 @@ function maxlength_menu($may_cache) {
   $items = array();
     
   if ($may_cache) {
-  } elseif (user_access(ADMINISTER_AUTO_EXPIRE)) {
+  }
+  elseif (user_access(ADMINISTER_AUTO_EXPIRE)) {
     $items[] = array(
       'path' => 'admin/settings/maxlength',
       'title' => t('Maxlength'),
@@ -41,7 +42,7 @@ function maxlength_menu($may_cache) {
 function _maxlength_admin_settings() {
   $form = array();
   
-  foreach(node_get_types() as $type => $name) {
+  foreach (node_get_types() as $type => $name) {
     $code = MAXLENGTH_NODE_TYPE . $type;
     
     $form['nodetypes'][$type] = array(
@@ -106,7 +107,7 @@ function theme_maxlength_textarea($element) {
   $prefix = '';
   
   if ($element['#name'] == 'body') {
-    $path = drupal_get_path('module','maxlength');
+    $path = drupal_get_path('module', 'maxlength');
     drupal_add_js($path . '/maxlength.js');
     
     $type = _maxlength_node_type_from_id(intval(arg(1)));
