@@ -1,0 +1,5 @@
+; $Id$
+
+name = "Maxlength"
+description = "Set a maximum length for body fileds."
+version = "$Name$"

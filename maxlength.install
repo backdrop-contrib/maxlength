@@ -1,0 +1,15 @@
+<?php
+// $Id$
+
+require_once 'maxlength.inc';
+
+function maxlength_uninstall() {
+  foreach(node_get_types() as $type => $name) {
+    $code = MAXLENGTH_NODE_TYPE . $type;
+    
+    variable_del($code . '_limit');
+    variable_del($code . '_maxlength');
+  }
+}
+
+?>
