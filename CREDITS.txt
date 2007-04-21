@@ -1,0 +1,1 @@
+Module inspired by functionality found in the ed_classified module.
