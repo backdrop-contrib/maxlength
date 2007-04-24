@@ -110,8 +110,15 @@ function theme_maxlength_textarea($element) {
     $path = drupal_get_path('module', 'maxlength');
     drupal_add_js($path . '/maxlength.js');
     
-    $type = _maxlength_node_type_from_id(intval(arg(1)));
+    if (arg(1) == 'add') {
+      $type = arg(2);
+    }
+    else
+    {
+      $type = _maxlength_node_type_from_id(intval(arg(1)));
+    }
     
+    drupal_set_message(MAXLENGTH_NODE_TYPE . $type . '_maxlength');
     $limit = variable_get(MAXLENGTH_NODE_TYPE . $type . '_maxlength', MAXLENGTH_DEFAULT_MAX);
     $remaining = $limit - strlen($element['#value']);
     
