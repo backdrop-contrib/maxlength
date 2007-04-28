@@ -5,7 +5,7 @@ require_once 'maxlength.inc';
 
 // hook_perm
 function maxlength_perm() {
-  return array(ADMINISTER_AUTO_EXPIRE);
+  return array(ADMINISTER_MAXLENGTH);
 }
 
 // hook_help
