@@ -118,7 +118,6 @@ function theme_maxlength_textarea($element) {
       $type = _maxlength_node_type_from_id(intval(arg(1)));
     }
     
-    drupal_set_message(MAXLENGTH_NODE_TYPE . $type . '_maxlength');
     $limit = variable_get(MAXLENGTH_NODE_TYPE . $type . '_maxlength', MAXLENGTH_DEFAULT_MAX);
     $remaining = $limit - strlen($element['#value']);
     
