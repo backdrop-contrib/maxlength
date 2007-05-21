@@ -45,6 +45,8 @@ function _maxlength_admin_settings() {
   foreach (node_get_types() as $type => $name) {
     $code = MAXLENGTH_NODE_TYPE . $type;
     
+    $type_info = node_get_types('type', $type);
+    
     $form['nodetypes'][$type] = array(
       '#type' => 'fieldset',
       '#title' => $name->name,
@@ -54,7 +56,7 @@ function _maxlength_admin_settings() {
     
     $form['nodetypes'][$type][$code . '_maxlength_title'] = array(
       '#type' => 'textfield',
-      '#title' => t('Title Maxlength'),
+      '#title' => t('!label Maxlength', array('!label' => $type_info->title_label)),
       '#field_suffix' => t('characters'),
       '#return_value' => 1,
       '#default_value' => variable_get($code . '_maxlength_title', ''),
@@ -63,7 +65,7 @@ function _maxlength_admin_settings() {
     
     $form['nodetypes'][$type][$code . '_maxlength_body'] = array(
       '#type' => 'textfield',
-      '#title' => t('Body Maxlength'),
+      '#title' => t('!label Maxlength', array('!label' => $type_info->body_label)),
       '#field_suffix' => t('characters'),
       '#return_value' => 1,
       '#default_value' => variable_get($code . '_maxlength_body', ''),
