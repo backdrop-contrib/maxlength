@@ -24,7 +24,7 @@ function maxlength_menu($may_cache) {
     
   if ($may_cache) {
   }
-  elseif (user_access(ADMINISTER_AUTO_EXPIRE)) {
+  else {
     $items[] = array(
       'path' => 'admin/settings/maxlength',
       'title' => t('Maxlength'),
