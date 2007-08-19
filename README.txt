@@ -1,3 +1,5 @@
+$Id$
+
 This module allows administrators to set maximum lengths for the body
 fields of content types.
 
