@@ -22,6 +22,8 @@ function maxlength_update_1() {
     variable_del($code_old . '_limit');
     variable_del($code_old . '_maxlength');
   }
+  
+  return array();
 }
 
 // hook_unistall
