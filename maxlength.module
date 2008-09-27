@@ -1,5 +1,9 @@
 <?php
 // $Id$
+/**
+ * @file
+ * Module to enable a max length countdown on node body and title.
+ */
 
 require_once 'maxlength.inc';
 
@@ -51,24 +55,24 @@ function _maxlength_admin_settings() {
       '#type' => 'fieldset',
       '#title' => $name->name,
       '#collapsible' => TRUE,
-      '#collapsed' => strlen(variable_get($code . '_t', '') . variable_get($code . '_b', '')) == 0,
+      '#collapsed' => strlen(variable_get($code .'_t', '') . variable_get($code .'_b', '')) == 0,
     );
     
-    $form['nodetypes'][$type][$code . '_t'] = array(
+    $form['nodetypes'][$type][$code .'_t'] = array(
       '#type' => 'textfield',
       '#title' => t('!label Maxlength', array('!label' => $type_info->title_label)),
       '#field_suffix' => t('characters'),
       '#return_value' => 1,
-      '#default_value' => variable_get($code . '_t', ''),
+      '#default_value' => variable_get($code .'_t', ''),
       '#description' => t('Maximum number of characters allowed for the title field of this content type. Leave blank for an unlimited size.'),
     );
     
-    $form['nodetypes'][$type][$code . '_b'] = array(
+    $form['nodetypes'][$type][$code .'_b'] = array(
       '#type' => 'textfield',
       '#title' => t('!label Maxlength', array('!label' => $type_info->body_label)),
       '#field_suffix' => t('characters'),
       '#return_value' => 1,
-      '#default_value' => variable_get($code . '_b', ''),
+      '#default_value' => variable_get($code .'_b', ''),
       '#description' => t('Maximum number of characters allowed for the body field of this content type. Leave blank for an unlimited size.'),
     );
   }
@@ -92,15 +96,15 @@ function maxlength_elements() {
 function _maxlength_limit_body() {
   if (arg(0) == 'node') {
     if (arg(1) == 'add') {
-      $type = arg(2);
+      $type = str_replace('-', '_', arg(2));
       
-      return strlen(variable_get(MAXLENGTH_NODE_TYPE . $type . '_b', '')) > 0;
+      return strlen(variable_get(MAXLENGTH_NODE_TYPE . $type .'_b', '')) > 0;
     }
     
     if (arg(2) == 'edit') {
       $nid = intval(arg(1));
       
-      return strlen(variable_get(MAXLENGTH_NODE_TYPE . _maxlength_node_type_from_id($nid) . '_b', '')) > 0;
+      return strlen(variable_get(MAXLENGTH_NODE_TYPE . _maxlength_node_type_from_id($nid) .'_b', '')) > 0;
     }
   }
   
@@ -112,17 +116,16 @@ function theme_maxlength_textarea($element) {
   
   if ($element['#name'] == 'body') {
     $path = drupal_get_path('module', 'maxlength');
-    drupal_add_js($path . '/maxlength.js');
+    drupal_add_js($path .'/maxlength.js');
     
     if (arg(1) == 'add') {
-      $type = arg(2);
+      $type = str_replace('-', '_', arg(2));
     }
-    else
-    {
+    else {
       $type = _maxlength_node_type_from_id(intval(arg(1)));
     }
     
-    $limit = intval(variable_get(MAXLENGTH_NODE_TYPE . $type . '_b', ''));
+    $limit = intval(variable_get(MAXLENGTH_NODE_TYPE . $type .'_b', ''));
     
     $remaining = $limit - drupal_strlen($element['#value']);
     
@@ -140,8 +143,8 @@ function theme_maxlength_textarea($element) {
       $remaining = 0;
     }
     
-    $element['#attributes']['onchange'] = 'maxlength_limit(this, ' . $limit . ');';
-    $element['#attributes']['onkeyup'] = 'maxlength_limit(this, ' . $limit . ');';
+    $element['#attributes']['onchange'] = 'maxlength_limit(this, '. $limit .');';
+    $element['#attributes']['onkeyup'] = 'maxlength_limit(this, '. $limit .');';
     
     $prefix = t('<div id="maxlength-counter">Content limited to !limit characters, remaining: <strong id="maxlength-counter-remaining">!remaining</strong></div>', array('!limit' => $limit, '!remaining' => $remaining));
   }
@@ -159,9 +162,9 @@ function _maxlength_node_type_from_id($nid) {
 function maxlength_form_alter($form_id, &$form) {
   if (isset($form['type'])) {
     $type = $form['type']['#value'];
-    if ( $type . '_node_form' == $form_id) {
-      if (strlen(variable_get(MAXLENGTH_NODE_TYPE . $type . '_t', '')) > 0) {
-        $limit = intval(variable_get(MAXLENGTH_NODE_TYPE . $type . '_t', ''));
+    if ( $type .'_node_form' == $form_id) {
+      if (strlen(variable_get(MAXLENGTH_NODE_TYPE . $type .'_t', '')) > 0) {
+        $limit = intval(variable_get(MAXLENGTH_NODE_TYPE . $type .'_t', ''));
         $form['title']['#maxlength'] = $limit;
         
         if (drupal_strlen($form['title']['#default_value']) > $limit) {
@@ -184,12 +187,12 @@ function maxlength_form_alter($form_id, &$form) {
 function maxlength_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   $code = MAXLENGTH_NODE_TYPE . $node->type;
   
-  if (strlen(variable_get($code . '_b', '')) > 0) {
+  if (strlen(variable_get($code .'_b', '')) > 0) {
     switch ($op) {
       case 'validate':
         $form = $a3;
         
-        $limit = intval(variable_get($code . '_b', ''));
+        $limit = intval(variable_get($code .'_b', ''));
         
         if (drupal_strlen($node->body) > $limit) {
           form_set_error('body', t('The maximum number of characters has been exceeded!'));
@@ -206,8 +209,8 @@ function maxlength_node_type($op, $info) {
     case 'delete':
       $code = MAXLENGTH_NODE_TYPE . $info->type;
       
-      variable_del($code . '_t');
-      variable_del($code . '_b');
+      variable_del($code .'_t');
+      variable_del($code .'_b');
       
       break;
     
@@ -216,18 +219,16 @@ function maxlength_node_type($op, $info) {
         $code_old = MAXLENGTH_NODE_TYPE . $info->old_type;
         $code_new = MAXLENGTH_NODE_TYPE . $info->type;
         
-        $max_title = variable_get($code_old . '_t', '');
-        $max_body  = variable_get($code_old . '_b', '');
+        $max_title = variable_get($code_old .'_t', '');
+        $max_body  = variable_get($code_old .'_b', '');
         
-        variable_set($code_new . '_t', $max_title);
-        variable_set($code_new . '_b', $max_body);
+        variable_set($code_new .'_t', $max_title);
+        variable_set($code_new .'_b', $max_body);
         
-        variable_del($code_old . '_t');
-        variable_del($code_old . '_b');
+        variable_del($code_old .'_t');
+        variable_del($code_old .'_b');
       }
       
       break;
   }
 }
-
-?>
