@@ -5,11 +5,7 @@
  * Module to enable a max length countdown on node body and title.
  */
 
-// Content types that limit body field
-define('MAXLENGTH_NODE_TYPE', 'maxlength_');
-
-// Permissions
-define('ADMINISTER_MAXLENGTH', 'administer maxlength');
+require_once 'maxlength.inc';
 
 /**
  * Implemenation of hook_perm().
