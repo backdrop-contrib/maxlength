@@ -5,18 +5,15 @@
  * Module to enable a max length countdown on node body and title.
  */
 
+
 require_once 'maxlength.inc';
 
-/**
- * Implemenation of hook_perm().
- */
+// hook_perm
 function maxlength_perm() {
   return array(ADMINISTER_MAXLENGTH);
 }
 
-/**
- * Implemenation of hook_help().
- */
+// hook_help
 function maxlength_help($section) {
   switch ($section) {
     case 'admin/help#maxlength':
@@ -26,18 +23,23 @@ function maxlength_help($section) {
   }
 }
 
-/**
- * Implemenation of hook_menu().
- */
-function maxlength_menu() {
-  $items['admin/settings/maxlength'] = array(
-    'title' => t('Maxlength'),
-    'description' => t('Set maximum length for body fields.'),
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('_maxlength_admin_settings'),
-    'access arguments' => array(ADMINISTER_MAXLENGTH),
-    'type' => MENU_NORMAL_ITEM,
-  );
+// hook_menu
+function maxlength_menu($may_cache) {
+  $items = array();
+    
+  if ($may_cache) {
+  }
+  else {
+    $items[] = array(
+      'path' => 'admin/settings/maxlength',
+      'title' => t('Maxlength'),
+      'description' => t('Set maximum length for body fields.'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => '_maxlength_admin_settings',
+      'access' => user_access(ADMINISTER_MAXLENGTH),
+      'type' => MENU_NORMAL_ITEM,
+    );
+  }
     
   return $items;
 }
@@ -45,123 +47,103 @@ function maxlength_menu() {
 function _maxlength_admin_settings() {
   $form = array();
   
-  foreach (node_get_types() as $type => $name) {
-    $code = MAXLENGTH_NODE_TYPE . $type;
-    
-    $type_info = node_get_types('type', $type);
-    
-    $form['nodetypes'][$type] = array(
-      '#type' => 'fieldset',
-      '#title' => $name->name,
-      '#collapsible' => TRUE,
-      '#collapsed' => strlen(variable_get($code .'_t', '') . variable_get($code .'_b', '')) == 0,
-    );
-    
-    $form['nodetypes'][$type][$code .'_t'] = array(
-      '#type' => 'textfield',
-      '#title' => t('!label Maxlength', array('!label' => $type_info->title_label)),
-      '#field_suffix' => t('characters'),
-      '#return_value' => 1,
-      '#default_value' => variable_get($code .'_t', ''),
-      '#description' => t('Maximum number of characters allowed for the title field of this content type. Leave blank for an unlimited size.'),
-    );
-    
-    $form['nodetypes'][$type][$code .'_b'] = array(
-      '#type' => 'textfield',
-      '#title' => t('!label Maxlength', array('!label' => $type_info->body_label)),
-      '#field_suffix' => t('characters'),
-      '#return_value' => 1,
-      '#default_value' => variable_get($code .'_b', ''),
-      '#description' => t('Maximum number of characters allowed for the body field of this content type. Leave blank for an unlimited size.'),
-    );
-  }
-
+  $form['contact_information'] = array(
+  '#value' => t('This page is now deprecated, check the edit page of the relevant content type to edit its settings'),
+  );
+  
   return system_settings_form($form);
 }
 
-/**
- * Implemenation of hook_elements().
- */
+// hook_elements
 function maxlength_elements() {
   $type = array();
-  
-  if (_maxlength_limit_body()) {
+  if (_maxlength_get_values('body') !== FALSE) {
     $type['textarea'] = array(
       '#theme' => 'maxlength_textarea',
+    );
+  }
+  if (_maxlength_get_values('title') !== FALSE) {
+    $type['textfield'] = array(
+      '#theme' => 'maxlength_textfield',
     );
   }
   
   return $type;
 }
 
-function _maxlength_limit_body() {
+function _maxlength_get_values($field = 'body') {
+  $type = '';
+  $values = '';
+  $values['limit'] = FALSE;
+  
   if (arg(0) == 'node') {
     if (arg(1) == 'add') {
-      $type = str_replace('-', '_', arg(2));
-      
-      return strlen(variable_get(MAXLENGTH_NODE_TYPE . $type .'_b', '')) > 0;
+      $type = str_replace('-','_',arg(2));
     }
     
     if (arg(2) == 'edit') {
-      $nid = intval(arg(1));
-      
-      return strlen(variable_get(MAXLENGTH_NODE_TYPE . _maxlength_node_type_from_id($nid) .'_b', '')) > 0;
+      $type = _maxlength_node_type_from_id(arg(1));      
     }
   }
   
-  return FALSE;
-}
-/**
- * Implementation of hook_theme().
- */ 
-function maxlength_theme(){
-  return array(
-    'maxlength_textarea' => array(
-      'arguments' => array(
-        'element' => array()
-      ),
-    ),
-  );
-}
-function theme_maxlength_textarea($element) {
-  $prefix = '';
+  if($type != ''){
+    $values['limit'] = variable_get(MAXLENGTH_NODE_TYPE . $field .'_'. $type, FALSE);
+    $values['use_js'] = variable_get(MAXLENGTH_NODE_TYPE . $field .'_js_'. $type, FALSE);
+    $values['text'] = variable_get(MAXLENGTH_NODE_TYPE . $field .'_text_'. $type, FALSE);
+  }
   
-  if ($element['#name'] == 'body') {
+  if($values['limit']) {
+    return $values;
+  }
+  else {
+    return FALSE;
+  }
+}
+
+function theme_maxlength_textarea($element) {
+  $prefix = _maxlength_theme_input($element);
+  return theme_textarea($element) . $prefix;
+}
+
+function theme_maxlength_textfield($element) {
+  $prefix = _maxlength_theme_input($element);
+  return theme_textfield($element) . $prefix;
+}
+
+function _maxlength_theme_input(&$element){
+  $prefix = '';
+  $values = _maxlength_get_values($element['#name']);
+  
+  if($values !== FALSE AND isset($values['limit']) AND $values['limit'] AND $values['use_js']) {
     $path = drupal_get_path('module', 'maxlength');
     drupal_add_js($path .'/maxlength.js');
-    
-    if (arg(1) == 'add') {
-      $type = str_replace('-', '_', arg(2));
-    }
-    else {
-      $type = _maxlength_node_type_from_id(intval(arg(1)));
-    }
-    
-    $limit = intval(variable_get(MAXLENGTH_NODE_TYPE . $type .'_b', ''));
-    
-    $remaining = $limit - drupal_strlen($element['#value']);
+
+    $remaining = $values['limit'] - drupal_strlen($element['#value']);
     
     if ($remaining < 0) {
       drupal_set_message(
         t('%body_field_label truncated to %limit characters!',
         array(
           '%body_field_label' => $element['#title'],
-          '%limit' => $limit)
+          '%limit' => $values['limit'])
         ),
         'error'
       );
       
-      $element['#value'] = drupal_substr($element['#value'], 0, $limit);
+      $element['#value'] = drupal_substr($element['#value'], 0, $values['limit']);
       $remaining = 0;
     }
     
-    $element['#attributes']['onchange'] = 'maxlength_limit(this, '. $limit .');';
-    $element['#attributes']['onkeyup'] = 'maxlength_limit(this, '. $limit .');';
+    $js = 'maxlength_limit(this, '. $values['limit'] .');';
     
-    $prefix = t('<div id="maxlength-counter">Content limited to !limit characters, remaining: <strong id="maxlength-counter-remaining">!remaining</strong></div>', array('!limit' => $limit, '!remaining' => $remaining));
+    $element['#attributes']['onchange'] = $js;
+    $element['#attributes']['onkeyup'] = $js;
+    $element['#attributes']['onload'] = $js;
+
+    $prefix = '<div id="'.$element['#id'].'-maxlength-counter" class="maxlength-counter">'.t($values['text'], array('!limit' => $values['limit'], '!remaining' => '<span class="maxlength-counter-remaining">'.$remaining.'</span>')).'</div>';
   }
   
-  return theme_textarea($element) . $prefix;
+  return $prefix;
 }
 
 function _maxlength_node_type_from_id($nid) {
@@ -170,81 +152,94 @@ function _maxlength_node_type_from_id($nid) {
   return $node->type;
 }
 
-/**
- * Implemenation of hook_form_alter().
- */
-function maxlength_form_alter(&$form, $form_state, $form_id) {
-  if (isset($form['type'])) {
-    $type = $form['type']['#value'];
-    if ( $type .'_node_form' == $form_id) {
-      if (strlen(variable_get(MAXLENGTH_NODE_TYPE . $type .'_t', '')) > 0) {
-        $limit = intval(variable_get(MAXLENGTH_NODE_TYPE . $type .'_t', ''));
-        $form['title']['#maxlength'] = $limit;
-        
-        if (drupal_strlen($form['title']['#default_value']) > $limit) {
-          $form['title']['#default_value'] = drupal_substr($form['title']['#default_value'], 0, $limit);
-          drupal_set_message(
-            t('%title_field_label truncated to %limit characters!',
-            array(
-              '%title_field_label' => $form['title']['#title'],
-              '%limit' => $limit)
-            ),
-            'error'
-          );
-        }
+// hook_form_alter
+function maxlength_form_alter($form_id, &$form) {  
+  if ($form_id == 'node_type_form' && isset($form['identity']['type'])) {
+    $type = $form['#node_type']->type;
+   
+    $labels = array('-3'=>'title','-1'=>'body');
+    foreach ($labels as $weight=>$label) {
+
+      // bit of a hack to allow us to position the input fields correctly
+      $form['submission'][$label.'_label']['#weight'] = $weight - 1;
+
+      $form['submission'][MAXLENGTH_NODE_TYPE . $label] = array(
+        '#type' => 'fieldset',
+        '#weight' => $weight,
+        '#title' => t('Limit !type length', array('!type'=>$label)),
+        '#collapsible' => TRUE,
+        '#collapsed' => strlen(variable_get($type .'_'. $label, '')) == 0,
+      );
+      
+      $form['submission'][MAXLENGTH_NODE_TYPE . $label][MAXLENGTH_NODE_TYPE . $label] = array(
+      '#type' => 'textfield',
+      '#title' => t('!label max length', array('!label' => ucwords($label))),
+      '#field_suffix' => t('characters'),
+      '#return_value' => 1,
+      '#size' => 4,
+      '#default_value' => variable_get(MAXLENGTH_NODE_TYPE . $label .'_'. $type, ''),
+      '#description' => t('Maximum number of characters allowed for the !type field of this content type. Leave blank for an unlimited size.', array('!type'=>$label)) .'<br/>'.
+                        '<b>'. t('Please remember, it counts all characters, including HTML, so may not work as expected with rich text editors e.g. FCKeditor / tinyMCE.') .'</b>',
+      );
+      $form['submission'][MAXLENGTH_NODE_TYPE . $label][MAXLENGTH_NODE_TYPE . $label .'_js'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable remaining characters countdown for the !label', array('!label' => ucwords($label))),
+      '#default_value' => variable_get(MAXLENGTH_NODE_TYPE . $label .'_js_'. $type, '0'),
+      '#description' => t('This will enable a java script based count down from the maximum number of characters to 0 for  the !type field of this content type. If no limit set this is ignored.', array('!type'=>$label)),
+      );
+      $form['submission'][MAXLENGTH_NODE_TYPE . $label][MAXLENGTH_NODE_TYPE . $label .'_text'] = array(
+      '#type' => 'textarea',
+      '#title' => t('!label count down message', array('!label' => ucwords($label))),
+      '#field_suffix' => t('characters'),
+      '#return_value' => 1,
+      '#default_value' => variable_get(MAXLENGTH_NODE_TYPE . $label .'_text_'. $type, 'Content limited to !limit characters, remaining: <strong>!remaining</strong>'),
+      '#description' => t('The text used in the java script message under the !type input, where "!limit" and "!remaining" are replaced by the appropriate numbers', array('!type'=>$label)),
+      );
+    }
+  }
+}
+
+// hook_nodeapi
+function maxlength_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  $labels = array('title','body');
+  
+  foreach ($labels as $label) {
+    if (strlen(variable_get(MAXLENGTH_NODE_TYPE . $label . $node->type, '')) > 0) {
+      switch ($op) {
+        case 'validate':
+          $form = $a3;
+          
+          $limit = intval(variable_get(MAXLENGTH_NODE_TYPE . $label . $node->type, ''));
+          
+          if (drupal_strlen($node->$label) > $limit) {
+            form_set_error($label, t('The maximum number of characters has been exceeded!'));
+          }
+          
+          break;
       }
     }
   }
 }
 
-/**
- * Implemenation of hook_nodeapi().
- */
-function maxlength_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
-  $code = MAXLENGTH_NODE_TYPE . $node->type;
-  
-  if (strlen(variable_get($code .'_b', '')) > 0) {
-    switch ($op) {
-      case 'validate':
-        $form = $a3;
-        
-        $limit = intval(variable_get($code .'_b', ''));
-        
-        if (drupal_strlen($node->body) > $limit) {
-          form_set_error('body', t('The maximum number of characters has been exceeded!'));
-        }
-        
-        break;
-    }
-  }
-}
-
-/**
- * Implemenation of hook_node_type().
- */
+// hook_node_type
 function maxlength_node_type($op, $info) {
+  $labels = array('title', 'js_title','text_title',
+                  'body', 'js_body', 'text_body');
+  
   switch ($op) {
     case 'delete':
-      $code = MAXLENGTH_NODE_TYPE . $info->type;
-      
-      variable_del($code .'_t');
-      variable_del($code .'_b');
-      
+      foreach ($labels as $label) {
+        variable_del(MAXLENGTH_NODE_TYPE . $label . $info->type);       
+      }
       break;
     
     case 'update':
       if (!empty($info->old_type) && $info->old_type != $info->type) {
-        $code_old = MAXLENGTH_NODE_TYPE . $info->old_type;
-        $code_new = MAXLENGTH_NODE_TYPE . $info->type;
-        
-        $max_title = variable_get($code_old .'_t', '');
-        $max_body  = variable_get($code_old .'_b', '');
-        
-        variable_set($code_new .'_t', $max_title);
-        variable_set($code_new .'_b', $max_body);
-        
-        variable_del($code_old .'_t');
-        variable_del($code_old .'_b');
+        foreach ($labels as $label) {
+          $old_var = variable_get(MAXLENGTH_NODE_TYPE . $label . $info->old_type, '');
+          variable_set(MAXLENGTH_NODE_TYPE . $label . $info->type, $old_var);    
+          variable_del(MAXLENGTH_NODE_TYPE . $label . $info->old_type);  
+        }
       }
       
       break;

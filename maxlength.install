@@ -30,12 +30,32 @@ function maxlength_update_1() {
   return array();
 }
 
+// hook_update_N
+function maxlength_update_2() {
+  foreach (node_get_types() as $type => $name) {
+    $code_old = MAXLENGTH_NODE_TYPE . $type;
+    
+    $max_title = variable_get($code_old .'_t', '');
+    $max_body  = variable_get($code_old .'_b', '');
+    
+    variable_set(MAXLENGTH_NODE_TYPE .'title_'. $type, $max_title);
+    variable_set(MAXLENGTH_NODE_TYPE .'body_'. $type, $max_body);
+    
+    variable_del($code_old .'_t');
+    variable_del($code_old .'_b');
+  }
+  
+  return array();
+}
+
 // hook_unistall
 function maxlength_uninstall() {
   foreach (node_get_types() as $type => $name) {
-    $code = MAXLENGTH_NODE_TYPE . $type;
+    $labels = array('title', 'js_title','text_title',
+                    'body', 'js_body', 'text_body');
     
-    variable_del($code .'_t');
-    variable_del($code .'_b');
+    foreach ($labels as $label) {
+      variable_del(MAXLENGTH_NODE_TYPE . $label . $type);    
+    }
   }
 }
