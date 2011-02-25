@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * Module to enable a max length countdown on node body and title.

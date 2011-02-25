@@ -1,4 +1,3 @@
-/* $Id$ */
 
 function maxlength_limit(textarea, limit) {
   var remainingTag = document.getElementById('maxlength-counter-remaining');
