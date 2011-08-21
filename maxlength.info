@@ -1,4 +1,4 @@
-
-name = "Maxlength"
-description = "Set a maximum length for body fileds."
-core = 6.x
+name = Maxlength
+description = Limit the number of characters in textfields and textareas and shows the amount of characters left.
+core = 7.x
+package = Fields

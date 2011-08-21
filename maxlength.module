@@ -1,251 +1,99 @@
 <?php
-/**
- * @file
- * Module to enable a max length countdown on node body and title.
- */
-
-require_once 'maxlength.inc';
 
 /**
- * Implemenation of hook_perm().
+ * Implements hook_help().
  */
-function maxlength_perm() {
-  return array(ADMINISTER_MAXLENGTH);
-}
-
-/**
- * Implemenation of hook_help().
- */
-function maxlength_help($section) {
-  switch ($section) {
-    case 'admin/help#maxlength':
-    case 'admin/modules#description':
-      return t('Sets a maximum length for body fields and shows a counter that is updated as you type.');
-      break;
+function maxlength_help($path, $arg) {
+  switch ($path) {
+    // Main module help for the block module
+    case 'admin/help#maxlength_js':
+      return '<p>' . t('Maxlength creates a new Form Property: #maxlength_js which in conjunction with #maxlength will enforce, via JavaScript, the maxlength of a textfield or textarea and will show the number of characters left.') . '</p>';
+      return '<p>' . t('Using the field setting page, you can limit textfields and textareas. For textfields this module will use the "<strong>Maximum length</strong>" value set in the <strong>field settings</strong>') . '</p>';
   }
 }
 
 /**
- * Implemenation of hook_menu().
+ * Implements hook_element_info_alter().
  */
-function maxlength_menu() {
-  $items['admin/settings/maxlength'] = array(
-    'title' => t('Maxlength'),
-    'description' => t('Set maximum length for body fields.'),
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('_maxlength_admin_settings'),
-    'access arguments' => array(ADMINISTER_MAXLENGTH),
-    'type' => MENU_NORMAL_ITEM,
-  );
-    
-  return $items;
+function maxlength_element_info_alter(&$cache) {
+  // Add prerender functions to textareas and text fields
+  $cache['textfield']['#pre_render'][] = 'maxlength_pre_render';
+  $cache['textarea']['#pre_render'][] = 'maxlength_pre_render';
+  $cache['text_format']['#pre_render'][] = 'maxlength_pre_render';
 }
 
-function _maxlength_admin_settings() {
-  $form = array();
-  
-  foreach (node_get_types() as $type => $name) {
-    $code = MAXLENGTH_NODE_TYPE . $type;
-    
-    $type_info = node_get_types('type', $type);
-    
-    $form['nodetypes'][$type] = array(
-      '#type' => 'fieldset',
-      '#title' => $name->name,
-      '#collapsible' => TRUE,
-      '#collapsed' => strlen(variable_get($code .'_t', '') . variable_get($code .'_b', '')) == 0,
-    );
-    
-    $form['nodetypes'][$type][$code .'_t'] = array(
+function maxlength_pre_render($element) {
+  if (isset($element['#maxlength']) && $element['#maxlength'] > 0 && isset($element['#maxlength_js']) && $element['#maxlength_js'] === TRUE) {
+    $element['#attributes']['class'][] = 'maxlength';
+    if ($element['#type'] != 'textfield') {
+      $element['#attributes']['maxlength'] = $element['#maxlength'];
+    }
+    $element['#attached']['js'][] = drupal_get_path('module', 'maxlength') . '/js/maxlength.js';
+  }
+  return $element;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function maxlength_form_field_ui_field_edit_form_alter(&$form, &$form_state, $form_id) {
+  // Add settings for textarea widgets
+  $fields = array('text_textarea_with_summary', 'text_textarea');
+  if(in_array($form['#instance']['widget']['type'], $fields)) {
+    $form['instance']['widget']['settings']['maxlength_js'] = array(
       '#type' => 'textfield',
-      '#title' => t('!label Maxlength', array('!label' => $type_info->title_label)),
-      '#field_suffix' => t('characters'),
-      '#return_value' => 1,
-      '#default_value' => variable_get($code .'_t', ''),
-      '#description' => t('Maximum number of characters allowed for the title field of this content type. Leave blank for an unlimited size.'),
-    );
-    
-    $form['nodetypes'][$type][$code .'_b'] = array(
-      '#type' => 'textfield',
-      '#title' => t('!label Maxlength', array('!label' => $type_info->body_label)),
-      '#field_suffix' => t('characters'),
-      '#return_value' => 1,
-      '#default_value' => variable_get($code .'_b', ''),
-      '#description' => t('Maximum number of characters allowed for the body field of this content type. Leave blank for an unlimited size.'),
+      '#title' => 'Maxlength JS',
+      '#description' => t('The maximum length of the field in characters.'),
+      '#default_value' => isset($form['#instance']['widget']['settings']['maxlength_js']) ? $form['#instance']['widget']['settings']['maxlength_js'] : NULL,
     );
   }
-
-  return system_settings_form($form);
-}
-
-/**
- * Implemenation of hook_elements().
- */
-function maxlength_elements() {
-  $type = array();
-  
-  if (_maxlength_limit_body()) {
-    $type['textarea'] = array(
-      '#theme' => 'maxlength_textarea',
+  // Add settings for textfield widgets
+  $fields = array('text_textfield');
+  if(in_array($form['#instance']['widget']['type'], $fields)) {
+    $form['instance']['widget']['settings']['maxlength_js'] = array(
+      '#type' => 'checkbox',
+      '#title' => 'Maxlength JS',
+      '#description' => t('Limit the maximum length of the field in characters using the "<strong>Maximum length</strong>" value set in the <strong>field settings</strong> using Javascript.'),
+      '#default_value' => isset($form['#instance']['widget']['settings']['maxlength_js']) ? $form['#instance']['widget']['settings']['maxlength_js'] : NULL,
     );
   }
-  
-  return $type;
-}
-
-function _maxlength_limit_body() {
-  if (arg(0) == 'node') {
-    if (arg(1) == 'add') {
-      $type = str_replace('-', '_', arg(2));
-      
-      return strlen(variable_get(MAXLENGTH_NODE_TYPE . $type .'_b', '')) > 0;
-    }
-    
-    if (arg(2) == 'edit') {
-      $nid = intval(arg(1));
-      
-      return strlen(variable_get(MAXLENGTH_NODE_TYPE . _maxlength_node_type_from_id($nid) .'_b', '')) > 0;
-    }
-  }
-  
-  return FALSE;
-}
-/**
- * Implementation of hook_theme().
- */ 
-function maxlength_theme(){
-  return array(
-    'maxlength_textarea' => array(
-      'arguments' => array(
-        'element' => array()
-      ),
-    ),
-  );
-}
-function theme_maxlength_textarea($element) {
-  $prefix = '';
-  
-  if ($element['#name'] == 'body') {
-    $path = drupal_get_path('module', 'maxlength');
-    drupal_add_js($path .'/maxlength.js');
-    
-    if (arg(1) == 'add') {
-      $type = str_replace('-', '_', arg(2));
-    }
-    else {
-      $type = _maxlength_node_type_from_id(intval(arg(1)));
-    }
-    
-    $limit = intval(variable_get(MAXLENGTH_NODE_TYPE . $type .'_b', ''));
-    
-    $remaining = $limit - drupal_strlen($element['#value']);
-    
-    if ($remaining < 0) {
-      drupal_set_message(
-        t('%body_field_label truncated to %limit characters!',
-        array(
-          '%body_field_label' => $element['#title'],
-          '%limit' => $limit)
-        ),
-        'error'
-      );
-      
-      $element['#value'] = drupal_substr($element['#value'], 0, $limit);
-      $remaining = 0;
-    }
-    
-    $element['#attributes']['onchange'] = 'maxlength_limit(this, '. $limit .');';
-    $element['#attributes']['onkeyup'] = 'maxlength_limit(this, '. $limit .');';
-    
-    $prefix = t('<div id="maxlength-counter">Content limited to !limit characters, remaining: <strong id="maxlength-counter-remaining">!remaining</strong></div>', array('!limit' => $limit, '!remaining' => $remaining));
-  }
-  
-  return theme_textarea($element) . $prefix;
-}
-
-function _maxlength_node_type_from_id($nid) {
-  $node = node_load($nid);
-  
-  return $node->type;
 }
 
 /**
- * Implemenation of hook_form_alter().
+ * Implements hook_field_attach_form().
  */
-function maxlength_form_alter(&$form, $form_state, $form_id) {
-  if (isset($form['type'])) {
-    $type = $form['type']['#value'];
-    if ( $type .'_node_form' == $form_id) {
-      if (strlen(variable_get(MAXLENGTH_NODE_TYPE . $type .'_t', '')) > 0) {
-        $limit = intval(variable_get(MAXLENGTH_NODE_TYPE . $type .'_t', ''));
-        $form['title']['#maxlength'] = $limit;
-        
-        if (drupal_strlen($form['title']['#default_value']) > $limit) {
-          $form['title']['#default_value'] = drupal_substr($form['title']['#default_value'], 0, $limit);
-          drupal_set_message(
-            t('%title_field_label truncated to %limit characters!',
-            array(
-              '%title_field_label' => $form['title']['#title'],
-              '%limit' => $limit)
-            ),
-            'error'
-          );
-        }
-      }
+function maxlength_field_attach_form($entity_type, $entity, &$form, &$form_state, $langcode) {
+  $fields = field_info_instances($entity_type, $form['#bundle']);
+  // Check if any of the fields has a #maxlength_js setting
+  foreach ($fields as $field_name => $value) {
+    if (isset($value['widget']['settings']['maxlength_js']) && $value['widget']['settings']['maxlength_js'] > 0) {
+      $elements[$field_name] = $value;
     }
+  }
+  if (isset($elements)) {
+    _maxlength_children($form, $elements);    
   }
 }
 
 /**
- * Implemenation of hook_nodeapi().
+ * Recursively add the #maxlength_js and #maxlength properties to the elements
+ * of a form
+ *
+ * @param $element
+ *   The form element to start looking for
+ * @param $ms_elements
+ *   An associative array of api field elements as returned by
+ *   field_info_instances() that the #maxlength and #maxlength_js properties
+ *   should be set, with the field_name as a key and the field_data as the value
  */
-function maxlength_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
-  $code = MAXLENGTH_NODE_TYPE . $node->type;
-  
-  if (strlen(variable_get($code .'_b', '')) > 0) {
-    switch ($op) {
-      case 'validate':
-        $form = $a3;
-        
-        $limit = intval(variable_get($code .'_b', ''));
-        
-        if (drupal_strlen($node->body) > $limit) {
-          form_set_error('body', t('The maximum number of characters has been exceeded!'));
-        }
-        
-        break;
+function _maxlength_children(&$element, $ms_elements) {
+  $children = element_get_visible_children($element);
+  foreach ($children as $child) {
+    // Check if the field settings for maxlength_js are set
+    if (isset($element[$child]['#field_name']) && isset($ms_elements[$element[$child]['#field_name']])) {
+      $element[$child]['#maxlength'] = isset($element[$child]['#maxlength']) ? $element[$child]['#maxlength'] : $ms_elements[$element[$child]['#field_name']]['widget']['settings']['maxlength_js'];
+      $element[$child]['#maxlength_js'] = TRUE;
     }
-  }
-}
-
-/**
- * Implemenation of hook_node_type().
- */
-function maxlength_node_type($op, $info) {
-  switch ($op) {
-    case 'delete':
-      $code = MAXLENGTH_NODE_TYPE . $info->type;
-      
-      variable_del($code .'_t');
-      variable_del($code .'_b');
-      
-      break;
-    
-    case 'update':
-      if (!empty($info->old_type) && $info->old_type != $info->type) {
-        $code_old = MAXLENGTH_NODE_TYPE . $info->old_type;
-        $code_new = MAXLENGTH_NODE_TYPE . $info->type;
-        
-        $max_title = variable_get($code_old .'_t', '');
-        $max_body  = variable_get($code_old .'_b', '');
-        
-        variable_set($code_new .'_t', $max_title);
-        variable_set($code_new .'_b', $max_body);
-        
-        variable_del($code_old .'_t');
-        variable_del($code_old .'_b');
-      }
-      
-      break;
+    _maxlength_js_children($element[$child], $ms_elements);
   }
 }
