@@ -77,9 +77,9 @@
     var defaults = {
       warning: 25,
       css: 'counter',
-      counterElement: 'span',
-      cssWarning: 'warning',
-      cssExceeded: 'exceeded',
+      counterElement: 'div',
+      cssWarning: 'messages warning',
+      cssExceeded: 'error',
       counterText: 'Characters left: @remaining',
       action: 'attach',
       enforce: false
