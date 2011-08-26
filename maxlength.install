@@ -17,6 +17,7 @@ function maxlength_update_7301() {
       field_update_instance($instance);
     }
   }
+}
 
   // @todo: Migrate node title
 
@@ -27,13 +28,6 @@ function maxlength_update_7301() {
  */
 function maxlength_update_7302() {
   $ret = array();
-  foreach (field_read_instances() as $instance) {
-    $fields = array('text_textarea_with_summary', 'text_textarea');
-    if (in_array($instance['widget']['type'], $fields) && !empty($form['field']['settings']['maxlength_js'])) {
-      $instance['widget']['settings']['maxlength_js'] = $form['field']['settings']['maxlength_js'];
-      field_update_instance($instance);
-    }
-  }
 
   return $ret;
 }
