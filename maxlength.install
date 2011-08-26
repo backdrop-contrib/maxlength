@@ -1,6 +1,18 @@
 <?php
-// @todo: Migrate node title
+/**
+ * @todo: Migrate node title
+ * @todo: Should we use maxlength_ for hook_uninstall instead of maxlength_js_
+ */
 
+
+/**
+ * Implements hook_uninstall().
+ */
+function maxlength_uninstall() {
+  db_delete('variable')
+    ->condition('name', 'maxlength_js_', 'LIKE')
+    ->execute();
+}
 
 /**
  * Implements hook_update_N().
