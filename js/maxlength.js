@@ -16,7 +16,9 @@
       }
 
       $('.maxlength', context).once('maxlength', function() {
-        $(this).charCount();
+        var options = {};
+        options['counterText'] = $(this).attr('maxlength_js_label');
+        $(this).charCount(options);
       });
     },
     detach: function(context, settings) {
@@ -67,7 +69,7 @@
       counter.removeClass(options.cssExceeded);
     }
 
-    counter.html(options.counterText + available);
+    counter.html(Drupal.t(options.counterText, {'@limit': limit, '@remaining': available}));
   };
 
   $.fn.charCount = function(options) {
@@ -78,7 +80,7 @@
       counterElement: 'span',
       cssWarning: 'warning',
       cssExceeded: 'exceeded',
-      counterText: Drupal.t('Characters left: '),
+      counterText: 'Characters left: @remaining',
       action: 'attach',
       enforce: false
     };

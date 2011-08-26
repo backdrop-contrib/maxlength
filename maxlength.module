@@ -57,6 +57,14 @@ function maxlength_form_field_ui_field_edit_form_alter(&$form, &$form_state, $fo
       '#default_value' => isset($form['#instance']['widget']['settings']['maxlength_js']) ? $form['#instance']['widget']['settings']['maxlength_js'] : NULL,
     );
   }
+
+  $form['instance']['widget']['settings']['maxlength_js_label'] = array(
+    '#type' => 'textarea',
+    '#rows' => 2,
+    '#title' => t('Count down message'),
+    '#default_value' =>  isset($form['#instance']['widget']['settings']['maxlength_js_label']) ? $form['#instance']['widget']['settings']['maxlength_js_label'] : 'Content limited to @limit characters, remaining: <strong>@remaining</strong>',
+    '#description' => t('The text used in the Javascript message under the input, where "@limit", "@remaining" and "@count" are replaced by the appropriate numbers.'),
+  );
 }
 
 /**
@@ -89,10 +97,16 @@ function maxlength_field_attach_form($entity_type, $entity, &$form, &$form_state
 function _maxlength_children(&$element, $ms_elements) {
   $children = element_get_visible_children($element);
   foreach ($children as $child) {
-    // Check if the field settings for maxlength_js are set
+    // Check if the field settings for maxlength_js are set and add the maxlength and the label text.
     if (isset($element[$child]['#field_name']) && isset($ms_elements[$element[$child]['#field_name']])) {
       $element[$child]['#maxlength'] = isset($element[$child]['#maxlength']) ? $element[$child]['#maxlength'] : $ms_elements[$element[$child]['#field_name']]['widget']['settings']['maxlength_js'];
       $element[$child]['#maxlength_js'] = TRUE;
+
+      $maxlength_js_label = !empty($ms_elements[$element[$child]['#field_name']]['widget']['settings']['maxlength_js_label']) ?
+        $ms_elements[$element[$child]['#field_name']]['widget']['settings']['maxlength_js_label'] : 'Content limited to @limit characters, remaining: <strong>@remaining</strong>';
+
+      // @todo: Shouldn't it support multi-fields as well?
+      $element[$child][0]['#attributes']['maxlength_js_label'] = array($maxlength_js_label);
     }
     _maxlength_children($element[$child], $ms_elements);
   }
