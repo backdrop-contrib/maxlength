@@ -87,6 +87,8 @@ function maxlength_field_attach_form($entity_type, $entity, &$form, &$form_state
  * Recursively add the #maxlength_js and #maxlength properties to the elements
  * of a form
  *
+ * @todo: This function is currently only working for fieldapi fields.
+ *
  * @param $element
  *   The form element to start looking for
  * @param $ms_elements
@@ -121,6 +123,9 @@ function maxlength_form_alter(&$form, &$form_state, $form_id) {
     if (!module_exists('title') || title_field_replacement_enabled('node', $form['#node']->type, 'title') !== TRUE) {
       $form['title']['#maxlength_js'] = TRUE;
       $form['title']['#maxlength'] = intval(variable_get('maxlength_js_' . $form['#node']->type, ''));
+
+      $form['title']['#attributes']['maxlength_js_label'] = array();
+      $form['title']['#attributes']['maxlength_js_label'][] = variable_get('maxlength_js_text_' . $form['#node']->type, 'Content limited to @limit characters, remaining: <strong>@remaining</strong>');
       maxlength_pre_render($form['title']);
     }
   }
@@ -136,5 +141,12 @@ function maxlength_form_node_type_form_alter(&$form, &$form_state, $form_id) {
     '#title' => 'Maxlength JS',
     '#description' => t('The maximum length of the field in characters.'),
     '#default_value' => variable_get('maxlength_js_' . $form['#node_type']->type, ''),
+  );
+  $form['submission']['maxlength_js_label'] = array(
+    '#type' => 'textarea',
+    '#rows' => 2,
+    '#title' => t('Count down message'),
+    '#default_value' =>  variable_get('maxlength_js_label_' . $form['#node_type']->type, 'Content limited to @limit characters, remaining: <strong>@remaining</strong>'),
+    '#description' => t('The text used in the Javascript message under the input, where "@limit", "@remaining" and "@count" are replaced by the appropriate numbers.'),
   );
 }
