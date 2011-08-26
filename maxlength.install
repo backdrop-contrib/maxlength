@@ -12,10 +12,13 @@ function maxlength_update_7300() {
   // Migrate node body
   foreach (node_type_get_names() as $type => $name) {
     $maxlength = variable_get('maxlength_body_' . $type, 0);
+    $label = variable_get('maxlength_body_text_' . $type, 0);
+
     if ($maxlength) {
       $instance = field_read_instance('node', 'body', $type);
       // Body is a text_textarea_with_summary
       $instance['widget']['settings']['maxlength_js'] = $maxlength;
+      $instance['widget']['settings']['maxlength_js_label'] = $label;
       field_update_instance($instance);
     }
   }
