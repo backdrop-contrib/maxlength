@@ -94,6 +94,6 @@ function _maxlength_children(&$element, $ms_elements) {
       $element[$child]['#maxlength'] = isset($element[$child]['#maxlength']) ? $element[$child]['#maxlength'] : $ms_elements[$element[$child]['#field_name']]['widget']['settings']['maxlength_js'];
       $element[$child]['#maxlength_js'] = TRUE;
     }
-    _maxlength_js_children($element[$child], $ms_elements);
+    _maxlength_children($element[$child], $ms_elements);
   }
 }
