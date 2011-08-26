@@ -1,11 +1,13 @@
 <?php
+// @todo: Migrate node title
+
 
 /**
  * Implements hook_update_N().
  *
  * Migrate from maxlength2 to maxlength3
  */
-function maxlength_update_7301() {
+function maxlength_update_7300() {
   $ret = array();
   // Migrate node body
   foreach (node_type_get_names() as $type => $name) {
@@ -19,15 +21,25 @@ function maxlength_update_7301() {
   }
 }
 
-  // @todo: Migrate node title
 
 /**
  * Implements hook_update_N().
  *
  * migrate fieldapi fields
  */
-function maxlength_update_7302() {
+function maxlength_update_7301() {
   $ret = array();
+  // The 7.x-2.x seems to support only global settings for fields not per instance
+  // so setup the maxlength for each instance of the field
+  foreach (field_read_fields() as $field) {
+    if (!empty($field['settings']['max_length'])) {
+    $maxlength = $field['settings']['max_length'];
+      $instances = field_read_instances(array('entity_type' => $entity_type, 'field_name' => $field_name, 'bundle' => $bundle));
+      foreach ($instances as $instance) {
+        $instance['widget']['settings']['maxlength_js'] = $maxlength;
+      }
+    }
+  }
 
   return $ret;
 }
