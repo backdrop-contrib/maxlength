@@ -36,14 +36,21 @@
    *   Dynamic character count for text areas and input fields
    *   written by Alen Grakalic
    *   http://cssglobe.com/post/7161/jquery-plugin-simplest-twitterlike-dynamic-character-count-for-textareas
+   *
+   *  @param obj
+   *    a jQuery object for input elements
+   *  @param options
+   *    an array of options.
+   *  @param count
+   *    In case obj.val() wouldn't return the text to count, this should
+   *    be passed with the number of characters.
    */
-
   ml.calculate = function(obj, options, count) {
     var counter = $('#' + obj.attr('id') + '-' + options.css);
     var limit = parseInt(obj.attr('maxlength'));
 
     if (count == undefined) {
-      count = obj.val().length;
+      count = ml.strlen(obj.val());
     }
 
     var available = limit - count;
@@ -61,7 +68,7 @@
       if (options.enforce === true) {
         obj.val(obj.val().substr(0, limit));
         // Re calculate text length
-        count = obj.val().length;
+        count = ml.strlen(obj.val());
       }
       available = limit - count;
     }
@@ -70,6 +77,16 @@
     }
 
     counter.html(Drupal.t(options.counterText, {'@limit': limit, '@remaining': available}));
+  };
+
+  /**
+   * Calculate the length of a string using PHP-calculation to count new lines
+   * as two characters.
+   *
+   * @see http://www.sitepoint.com/blogs/2004/02/16/line-endings-in-javascript/
+   */
+  ml.strlen = function(str) {
+    return str.replace(/(\r\n|\r|\n)/g, "\r\n").length;
   };
 
   $.fn.charCount = function(options) {
@@ -108,7 +125,7 @@
 
   /**
    * Integrate with WYSIWYG
-   * Detect changes on editors and invoke ml.counter()
+   * Detect changes on editors and invoke ml.calculate()
    */
   ml.tinymce = function() {
     // We only run it once
@@ -131,19 +148,19 @@
       });
     }
   }
-  // Invoke ml.counter() for editor
+  // Invoke ml.calculate() for editor
   ml.tinymceChange = function(ed) {
     // CLone to avoid changing defaults
     var options = $.extend({}, ml.options[ed.editorId]);
     // We can't enforce with WYSIWYG
     // HTML makes it hard to control withouth breaking it
     options.enforce = false;
-    ml.calculate($(ed.getElement()), options, ed.getContent().length);
+    ml.calculate($(ed.getElement()), options, ml.strlen(ed.getContent()));
   };
 
   /**
    * Integrate with ckEditor
-   * Detect changes on editors and invoke ml.counter()
+   * Detect changes on editors and invoke ml.calculate()
    */
   ml.ckeditor = function() {
     // We only run it once
@@ -164,14 +181,14 @@
 
     }
   }
-  // Invoke ml.counter() for editor
+  // Invoke ml.calculate() for editor
   ml.ckeditorChange = function(e) {
     // CLone to avoid changing defaults
     var options = $.extend({}, ml.options[e.editor.element.getId()]);
     // We can't enforce with WYSIWYG
     // HTML makes it hard to control withouth breaking it
     options.enforce = false;
-    ml.calculate($('#' + e.editor.element.getId()), options, e.editor.getData().length);
+    ml.calculate($('#' + e.editor.element.getId()), options, ml.strlen(e.editor.getData()));
   };
 
 })(jQuery);
