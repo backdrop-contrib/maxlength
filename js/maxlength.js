@@ -13,6 +13,8 @@
             ml[editor]();
           }
         });
+      } else if (Drupal.settings.ckeditor != undefined) {
+        ml.ckeditor();
       }
 
       $('.maxlength', context).once('maxlength', function() {
