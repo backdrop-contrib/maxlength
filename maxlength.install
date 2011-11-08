@@ -1,4 +1,10 @@
-<?php
+<?php  
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Maxlength module.
+ */
+
 /**
  * @todo: Migrate node title
  * @todo: Should we use maxlength_ for hook_uninstall instead of maxlength_js_
