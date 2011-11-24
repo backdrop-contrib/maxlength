@@ -185,7 +185,7 @@ function maxlength_validate_input(&$element, &$form_state) {
  */
 function maxlength_form_alter(&$form, &$form_state, $form_id) {
   // Attach maxlength to node title
-  if (strpos($form_id, '_node_form') !== FALSE && variable_get('maxlength_js_' . $form['#node']->type, FALSE)) {
+  if (isset($form['#node']) && strpos($form_id, '_node_form') !== FALSE && variable_get('maxlength_js_' . $form['#node']->type, FALSE)) {
     if (!module_exists('title') || title_field_replacement_enabled('node', $form['#node']->type, 'title') !== TRUE) {
       $form['title']['#maxlength_js'] = TRUE;
       $form['title']['#maxlength'] = intval(variable_get('maxlength_js_' . $form['#node']->type, ''));
