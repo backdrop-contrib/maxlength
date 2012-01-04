@@ -265,7 +265,13 @@
       return 'removed';
     }
 
-    $(this).after('<' + options.counterElement + ' id="' + $(this).attr('id') + '-' + options.css + '" class="' + options.css + '"></' + options.counterElement + '>');
+    var counterElement = $('<' + options.counterElement + ' id="' + $(this).attr('id') + '-' + options.css + '" class="' + options.css + '"></' + options.counterElement + '>');
+    if ($(this).next('div.grippie').length) {
+      $(this).next('div.grippie').after(counterElement);
+    } else {
+      $(this).after(counterElement);
+    }
+
     ml.calculate($(this), options);
     $(this).keyup(function() {
       ml.calculate($(this), options);
