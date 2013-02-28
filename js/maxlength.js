@@ -13,7 +13,7 @@
             ml[editor]();
           }
         });
-      } else if (Drupal.settings.ckeditor != undefined) {
+      } else if (Drupal.settings.ckeditor != undefined && typeof(CKEDITOR) != 'undefined') {
         ml.ckeditor();
       }
 
