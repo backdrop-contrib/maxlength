@@ -15,6 +15,19 @@ function maxlength_help($path, $arg) {
 }
 
 /**
+ * Implements hook_permission().
+ *
+ */
+function maxlength_permission() {
+  return array(
+    'bypass maxlength' => array(
+      'title' => t('Bypass maxlength setting'),
+      'description' => t("If a maxlength is configured for a certain field, the user don't see the value."),
+    ),
+  );
+}
+
+/**
  * Implements hook_element_info_alter().
  */
 function maxlength_element_info_alter(&$cache) {
@@ -119,7 +132,7 @@ function maxlength_field_attach_form($entity_type, $entity, &$form, &$form_state
     }
   }
   if (isset($elements)) {
-    _maxlength_children($form, $elements);    
+    _maxlength_children($form, $elements);
   }
 }
 
@@ -137,6 +150,14 @@ function maxlength_field_attach_form($entity_type, $entity, &$form, &$form_state
  *   should be set, with the field_name as a key and the field_data as the value
  */
 function _maxlength_children(&$element, $ms_elements) {
+  $bypass = &drupal_static(__FUNCTION__);
+  if (isset($bypass) && $bypass) {
+    return;
+  }
+  else if (!isset($bypass)) {
+    $bypass = user_access('bypass maxlength');
+  }
+
   $children = element_get_visible_children($element);
   foreach ($children as $child) {
     // Check if the field settings for maxlength_js are set and add the maxlength and the label text.
