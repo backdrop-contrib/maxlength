@@ -110,14 +110,17 @@ function maxlength_form_field_ui_field_edit_form_alter(&$form, &$form_state, $fo
       '#default_value' => isset($form['#instance']['widget']['settings']['maxlength_js']) ? $form['#instance']['widget']['settings']['maxlength_js'] : NULL,
     );
   }
-
-  $form['instance']['widget']['settings']['maxlength_js_label'] = array(
-    '#type' => 'textarea',
-    '#rows' => 2,
-    '#title' => t('Count down message'),
-    '#default_value' =>  isset($form['#instance']['widget']['settings']['maxlength_js_label']) ? $form['#instance']['widget']['settings']['maxlength_js_label'] : MAXLENGTH_DEFAULT_JS_LABEL,
-    '#description' => t('The text used in the Javascript message under the input, where "@limit", "@remaining" and "@count" are replaced by the appropriate numbers.'),
-  );
+  // Add settings for the maxlength widget label, only for allowed fields.
+  $fields = array('text_textfield', 'text_textarea_with_summary', 'text_textarea');
+  if (in_array($form['#instance']['widget']['type'], $fields)) {
+    $form['instance']['widget']['settings']['maxlength_js_label'] = array(
+      '#type' => 'textarea',
+      '#rows' => 2,
+      '#title' => t('Count down message'),
+      '#default_value' =>  isset($form['#instance']['widget']['settings']['maxlength_js_label']) ? $form['#instance']['widget']['settings']['maxlength_js_label'] : MAXLENGTH_DEFAULT_JS_LABEL,
+      '#description' => t('The text used in the Javascript message under the input, where "@limit", "@remaining" and "@count" are replaced by the appropriate numbers.'),
+    );
+  }
 }
 
 /**
