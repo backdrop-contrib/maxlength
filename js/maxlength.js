@@ -249,7 +249,7 @@
       counterElement: 'div',
       cssWarning: 'messages warning',
       cssExceeded: 'error',
-      counterText: Drupal.t('Content limitedd to @limit characters, remaining: <strong>@remaining</strong>'),
+      counterText: Drupal.t('Content limited to @limit characters, remaining: <strong>@remaining</strong>'),
       action: 'attach',
       enforce: false,
       truncateHtml: false
