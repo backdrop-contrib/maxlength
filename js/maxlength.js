@@ -126,14 +126,7 @@
     // making the lineendings with two chars
     input = ml.twochar_lineending(input);
     // We do want that the space characters to count as 1, not 6...
-    var maxlength_strip_out_spaces = Drupal.settings.maxlength.maxlength_strip_out_spaces;
     input = input.replace('&nbsp;', ' ');
-    if(maxlength_strip_out_spaces) {
-      input = input.replace(/&nbsp;/g, ' ');
-      input = input.replace(/ /g, ' ');
-      input = input.replace(/\s+/g, '');
-    }
-
      //input = input.split(' ').join('');
     // Strips HTML and PHP tags from a string
      allowed = (((allowed || "") + "")
