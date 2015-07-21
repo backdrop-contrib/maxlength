@@ -48,12 +48,18 @@ function maxlength_element_info_alter(&$cache) {
  */
 function maxlength_pre_render($element) {
   if (((isset($element['#maxlength']) && $element['#maxlength'] > 0) ||(isset($element['#attributes']['maxlength']) && $element['#attributes']['maxlength'] > 0)) &&
-        isset($element['#maxlength_js']) && $element['#maxlength_js'] === TRUE) {
+    isset($element['#maxlength_js']) && $element['#maxlength_js'] === TRUE) {
     if ($element['#type'] == 'textarea' && !isset($element['#attributes']['maxlength'])) {
       $element['#attributes']['maxlength'] = $element['#maxlength'];
     }
     $element['#attributes']['class'][] = 'maxlength';
-    $element['#attached']['js'][] = drupal_get_path('module', 'maxlength') . '/js/maxlength.js';
+    $element['maxlength']['#attached']['js'][] = drupal_get_path('module', 'maxlength') . '/js/maxlength.js';
+    $element['maxlength']['#attached']['js'][] = array(
+      'type' => 'setting',
+      'data' => array('maxlength' => array(
+        'maxlength_strip_out_spaces' => variable_get('maxlength_strip_out_spaces', ''),
+      )),
+    );
   }
   return $element;
 }
@@ -106,6 +112,17 @@ function maxlength_form_field_ui_field_edit_form_alter(&$form, &$form_state, $fo
         ),
       ),
     );
+    $form['instance']['widget']['settings']['strip_out_spaces'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Strip out spaces from the character count'),
+      '#description' => t('Check this option if you would like spaces to NOT count toward the total length entered in by the user.'),
+      '#default_value' => variable_get('maxlength_strip_out_spaces', ''),
+      '#states' => array(
+        'enabled' => array(
+          ':input[id=edit-instance-widget-settings-maxlength-js-cut-text]' => array('checked' => TRUE),
+        ),
+      ),
+    );
   }
   // Add settings for textfield widgets.
   $fields = array('text_textfield');
@@ -128,6 +145,11 @@ function maxlength_form_field_ui_field_edit_form_alter(&$form, &$form_state, $fo
       '#description' => t('The text used in the Javascript message under the input, where "@limit", "@remaining" and "@count" are replaced by the appropriate numbers.'),
     );
   }
+  $form['#submit'][]='maxlength_process_strip_out_spaces';
+}
+
+function maxlength_process_strip_out_spaces(&$form,&$form_state,$form_id) {
+  variable_set('maxlength_strip_out_spaces', $form_state['values']['instance']['widget']['settings']['strip_out_spaces']);
 }
 
 /**
@@ -160,6 +182,7 @@ function maxlength_field_attach_form($entity_type, $entity, &$form, &$form_state
  *   should be set, with the field_name as a key and the field_data as the value.
  */
 function _maxlength_children(&$element, $ms_elements) {
+  watchdog('strip_tags_problem', 'got in here');
   $bypass = &drupal_static(__FUNCTION__);
   // Add "$conf['maxlength_always_for_uid1'] = TRUE;" to settings.php to activate
   // for user #1.
@@ -169,7 +192,6 @@ function _maxlength_children(&$element, $ms_elements) {
   elseif (!isset($bypass)) {
     $bypass = $GLOBALS['user']->uid == 1 ? !variable_get('maxlength_always_for_uid1', FALSE) : user_access('bypass maxlength');
   }
-
   $children = element_get_visible_children($element);
   foreach ($children as $child) {
     // Check if the field settings for maxlength_js are set and add the maxlength and the label text.
@@ -235,9 +257,23 @@ function maxlength_validate_input(&$element, &$form_state) {
   if (isset($element['#attributes']['maxlength']) && isset($element['#value'])) {
     // Compute the length of the text, without counting the tags, and consider
     // the "enter" characters as only one character.
-    $value = filter_xss(str_replace(array("\r\n", '&nbsp;'), array(' ', ' '), $element['#value']), array());
+    //$value = filter_xss(str_replace(array("\r\n", '&nbsp;'), array(' ', ' '), $element['#value']), array());
+    $value = $element['#value'];
     $value = strip_tags($value);
-    $value = preg_replace("/&#?[a-z0-9]+;/i","1",$value);
+    $value = htmlentities($value);
+    $value = preg_replace("/&cent;/", "1", $value);
+    $value = preg_replace("/&#162;/", "1", $value);
+    if(variable_get('maxlength_strip_out_spaces', '')) {
+      $value = preg_replace("/&nbsp;/", "", $value);
+      $value = preg_replace("/ /i", "", $value);
+    }
+    else {
+      $value = html_entity_decode($value);
+      $value = preg_replace("/&nbsp;/", "1", $value);
+      $value = preg_replace("/ /i", "1", $value);
+    }
+
+
     if (drupal_strlen($value) > $element['#attributes']['maxlength']) {
       form_error($element, t('!name cannot be longer than %max characters but is currently %length characters long.', array('!name' => empty($element['#title']) ? $element['#parents'][0] : $element['#title'], '%max' => $element['#attributes']['maxlength'], '%length' => drupal_strlen($value))));
     }

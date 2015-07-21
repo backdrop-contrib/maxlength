@@ -109,7 +109,7 @@
       counter.removeClass(options.cssExceeded);
     }
 
-    counter.html(options.counterText.replace('@limit', limit).replace('@remaining', available).replace('@count', count));
+    counter.html(options.counterText.replace('@limit', limit).replace('@remaining', available).replace('@count', count + ' hello'));
   };
 
   /**
@@ -249,7 +249,7 @@
       counterElement: 'div',
       cssWarning: 'messages warning',
       cssExceeded: 'error',
-      counterText: Drupal.t('Content limited to @limit characters, remaining: <strong>@remaining</strong>'),
+      counterText: Drupal.t('Content limitedd to @limit characters, remainingg: <strong>@remaining</strong>'),
       action: 'attach',
       enforce: false,
       truncateHtml: false
@@ -327,6 +327,7 @@
       strip out some html and special characters so an accurate character
       count can be taken. */
     var bodyContent = ml.tinymceGetData(ed);
+    var maxlength_strip_out_spaces = Drupal.settings.maxlength.maxlength_strip_out_spaces;
     bodyContent = bodyContent.replace(/&gt;/g, ' ');
     bodyContent = bodyContent.replace(/&lt;/g, ' ');
     bodyContent = bodyContent.replace(/&amp;/g, ' ');
@@ -335,7 +336,11 @@
     bodyContent = bodyContent.replace(/\<\/p>/g, "");
     bodyContent = bodyContent.replace(/[\n\r]/g, '');
     bodyContent = bodyContent.replace(/&amp;/g, '&');
-    bodyContent = bodyContent.replace(/&nbsp;/g, ' ');
+    if(maxlength_strip_out_spaces) {
+      bodyContent = bodyContent.replace(/&nbsp;/g, ' ');
+      bodyContent = bodyContent.replace(/ /g, ' ');
+      bodyContent = bodyContent.replace(/\s+/g, '');
+    }
     bodyContent = bodyContent.replace(/\<span>/g, ' ');
     bodyContent = bodyContent.replace(/\<\/span>/g, ' ');
     bodyContent = bodyContent.replace(/\<br>/g, ' ');
