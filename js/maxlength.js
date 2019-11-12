@@ -7,7 +7,7 @@
   Backdrop.behaviors.maxlength = {
     attach: function(context, settings) {
 
-      if (Backdrop.editors.ckeditor != undefined && typeof(CKEDITOR) != 'undefined') {
+      if (typeof(CKEDITOR) != 'undefined') {
         ml.ckeditor();
       }
 
