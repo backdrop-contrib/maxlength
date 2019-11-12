@@ -1,0 +1,12 @@
+{
+    "_config_name": "maxlength.settings",
+    "maxlength_body_type": "dynamic variable in file /maxlength/maxlength.install line 32",
+    "maxlength_body_text_type": "dynamic variable in file /maxlength/maxlength.install line 34",
+    "maxlength_comment_comment_type": "dynamic variable in file /maxlength/maxlength.install line 79",
+    "maxlength_comment_comment_text_type": "dynamic variable in file /maxlength/maxlength.install line 81",
+    "maxlength_always_for_uid1": "FALSE",
+    "maxlength_js_formnodetype": "dynamic variable in file /maxlength/maxlength.module line 257",
+    "maxlength_js_label_formnodetype": "dynamic variable in file /maxlength/maxlength.module line 260",
+    "maxlength_js_formnode_typetype": "dynamic variable in file /maxlength/maxlength.module line 280",
+    "maxlength_js_label_formnode_typetype": "dynamic variable in file /maxlength/maxlength.module line 287"
+}

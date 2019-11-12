@@ -4,7 +4,7 @@
  * Test maxlength module.
  */
 
-class MaxlengthTestCase extends DrupalWebTestCase {
+class MaxlengthTestCase extends BackdropWebTestCase {
   private $hyphen_type;
   private $type;
 
@@ -19,25 +19,25 @@ class MaxlengthTestCase extends DrupalWebTestCase {
   protected function setUp() {
     parent::setUp('maxlength');
 
-    $type = $this->drupalCreateContentType();
+    $type = $this->backdropCreateContentType();
     $this->type = $type->type;
     $this->hyphen_type = str_replace('_', '-', $this->type);
-    $this->admin = $this->drupalCreateUser(array('administer content types', 'bypass node access'));
+    $this->admin = $this->backdropCreateUser(array('administer content types', 'bypass node access'));
   }
 
   /**
    * Test fieldapi field.
    */
   function testField() {
-    $this->drupalLogin($this->admin);
+    $this->backdropLogin($this->admin);
 
     $edit = array(
       'instance[widget][settings][maxlength_js]' => rand(50, 100),
       'instance[widget][settings][maxlength_js_label]' => $this->randomString(30),
     );
-    $this->drupalPost('admin/structure/types/manage/' . $this->hyphen_type . '/fields/body', $edit, t('Save settings'));
+    $this->backdropPost('admin/structure/types/manage/' . $this->hyphen_type . '/fields/body', $edit, t('Save settings'));
 
-    $this->drupalGet('node/add/' . $this->hyphen_type);
+    $this->backdropGet('node/add/' . $this->hyphen_type);
 
     // Check the maxlength html attributes.
     $elements = $this->xpath('//textarea[@id=:id]', array(':id' => 'edit-body-und-0-value'));
@@ -66,41 +66,41 @@ class MaxlengthTestCase extends DrupalWebTestCase {
    * Test title field.
    */
   function testTitle() {
-    $this->drupalLogin($this->admin);
+    $this->backdropLogin($this->admin);
 
     $edit = array(
       'maxlength_js' => rand(50, 100),
       'maxlength_js_label' => $this->randomString(30),
     );
 
-    $this->drupalPost('admin/structure/types/manage/' . $this->hyphen_type . '/edit', $edit, t('Save content type'));
+    $this->backdropPost('admin/structure/types/manage/' . $this->hyphen_type . '/edit', $edit, t('Save content type'));
 
-    $this->drupalGet('node/add/' . $this->hyphen_type);
+    $this->backdropGet('node/add/' . $this->hyphen_type);
 
     // Check the maxlength html attributes.
     $elements = $this->xpath('//input[@id=:id]', array(':id' => 'edit-title'));
 
-/*
-    foreach ($elements[0]->attributes() as $key => $value) {
-      switch ($key) {
-        case 'class':
-          $this->assertTrue(strpos($value, 'maxlength'), 'Take sure the maxlength class is existant');
-          break;
+    /*
+     foreach ($elements[0]->attributes() as $key => $value) {
+     switch ($key) {
+     case 'class':
+     $this->assertTrue(strpos($value, 'maxlength'), 'Take sure the maxlength class is existant');
+     break;
 
-        case 'maxlength_js':
-          $this->assertTrue($value, 'Take sure that the maxlenght_js attribute is set.');
-          break;
+     case 'maxlength_js':
+     $this->assertTrue($value, 'Take sure that the maxlenght_js attribute is set.');
+     break;
 
-        case 'maxlength_js_label':
-          $this->assertEqual($edit['maxlength_js_label'], $value, 'Take sure that the maxlenght_js_label is the defined one.');
-          break;
+     case 'maxlength_js_label':
+     $this->assertEqual($edit['maxlength_js_label'], $value, 'Take sure that the maxlenght_js_label is the defined one.');
+     break;
 
-        case 'maxlength':
-          $this->assertEqual($edit['maxlenght_js'], $value);
-          break;
-      }
-    }
-*/
+     case 'maxlength':
+     $this->assertEqual($edit['maxlenght_js'], $value);
+     break;
+     }
+     }
+     */
   }
 
 }

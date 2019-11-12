@@ -20,72 +20,59 @@ function maxlength_uninstall() {
     ->execute();
 }
 
-/**
- * Implements hook_update_N().
- *
- * Migrate from maxlength2 to maxlength3.
- */
-function maxlength_update_7300() {
-  $ret = array();
-  // Migrate node body.
-  foreach (node_type_get_names() as $type => $name) {
-    $maxlength = variable_get('maxlength_body_' . $type, 0);
-    variable_del('maxlength_body_' . $type);
-    $label = variable_get('maxlength_body_text_' . $type, 0);
-    variable_del('maxlength_body_text_' . $type);
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function maxlength_update_7300() { }
 
-    if ($maxlength) {
-      $instance = field_read_instance('node', 'body', $type);
-      // Body is a text_textarea_with_summary.
-      $instance['widget']['settings']['maxlength_js'] = $maxlength;
-      $instance['widget']['settings']['maxlength_js_label'] = $label;
-      field_update_instance($instance);
-    }
-  }
-}
 
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function maxlength_update_7301() { }
+
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function maxlength_update_7302() { }
 
 /**
- * Implements hook_update_N().
- *
- * migrate fieldapi fields
+ * Implements hook_update_last_removed().
  */
-function maxlength_update_7301() {
-  $ret = array();
-  // The 7.x-2.x seems to support only global settings for fields not per instance
-  // so setup the maxlength for each instance of the field.
-  foreach (field_read_fields() as $field) {
-    if (!empty($field['settings']['max_length'])) {
-      $maxlength = $field['settings']['max_length'];
-      $instances = field_read_instances(array('entity_type' => $entity_type, 'field_name' => $field_name, 'bundle' => $bundle));
-      foreach ($instances as $instance) {
-        $instance['widget']['settings']['maxlength_js'] = $maxlength;
-      }
-    }
-  }
-
-  return $ret;
+function maxlength_update_last_removed() {
+  return 7302;
 }
 
 /**
  * Implements hook_update_N().
- *
- * Migrate comment settings.
  */
-function maxlength_update_7302() {
-  $ret = array();
-  // Migrate node body.
-  foreach (node_type_get_names() as $type => $name) {
-    $maxlength = variable_get('maxlength_comment_comment_' . $type, 0);
-    variable_del('maxlength_comment_comment_' . $type);
-    $label = variable_get('maxlength_comment_comment_text_' . $type, 0);
-    variable_del('maxlength_comment_comment_text_' . $type);
-    if ($maxlength) {
-      $instance = field_read_instance('comment', 'comment_body', $type);
-      // Body is a text_textarea_with_summary.
-      $instance['widget']['settings']['maxlength_js'] = $maxlength;
-      $instance['widget']['settings']['maxlength_js_label'] = $label;
-      field_update_instance($instance);
-    }
-  }
+function maxlength_update_1000() {
+  $config = config('maxlength.settings');
+  $config->set('maxlength_body_type', update_variable_get('maxlength_body_type', 'dynamic variable in file /maxlength/maxlength.install line 32'));
+  $config->set('maxlength_body_text_type', update_variable_get('maxlength_body_text_type', 'dynamic variable in file /maxlength/maxlength.install line 34'));
+  $config->set('maxlength_comment_comment_type', update_variable_get('maxlength_comment_comment_type', 'dynamic variable in file /maxlength/maxlength.install line 79'));
+  $config->set('maxlength_comment_comment_text_type', update_variable_get('maxlength_comment_comment_text_type', 'dynamic variable in file /maxlength/maxlength.install line 81'));
+  $config->set('maxlength_always_for_uid1', update_variable_get('maxlength_always_for_uid1', 'FALSE'));
+  $config->set('maxlength_js_formnodetype', update_variable_get('maxlength_js_formnodetype', 'dynamic variable in file /maxlength/maxlength.module line 257'));
+  $config->set('maxlength_js_label_formnodetype', update_variable_get('maxlength_js_label_formnodetype', 'dynamic variable in file /maxlength/maxlength.module line 260'));
+  $config->set('maxlength_js_formnode_typetype', update_variable_get('maxlength_js_formnode_typetype', 'dynamic variable in file /maxlength/maxlength.module line 280'));
+  $config->set('maxlength_js_label_formnode_typetype', update_variable_get('maxlength_js_label_formnode_typetype', 'dynamic variable in file /maxlength/maxlength.module line 287'));
+  update_variable_del('maxlength_body_type');
+  update_variable_del('maxlength_body_text_type');
+  update_variable_del('maxlength_comment_comment_type');
+  update_variable_del('maxlength_comment_comment_text_type');
+  update_variable_del('maxlength_always_for_uid1');
+  update_variable_del('maxlength_js_formnodetype');
+  update_variable_del('maxlength_js_label_formnodetype');
+  update_variable_del('maxlength_js_formnode_typetype');
+  update_variable_del('maxlength_js_label_formnode_typetype');
+}
+
+/**
+ * Implements hook_install().
+ */
+function maxlength_install() {
+  // Dynamically generated variable data was detected.
+  // /maxlength/maxlength.install line 32
+  // /maxlength/maxlength.install line 34
+  // /maxlength/maxlength.install line 79
+  // /maxlength/maxlength.install line 81
+  // /maxlength/maxlength.module line 257
+  // /maxlength/maxlength.module line 260
+  // /maxlength/maxlength.module line 280
+  // /maxlength/maxlength.module line 287
 }

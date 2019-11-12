@@ -1,6 +1,6 @@
 name = Maxlength
 description = Limit the number of characters in textfields and textareas and shows the amount of characters left.
-core = 7.x
+backdrop = 1.x
+type = module
 package = Fields
 
-files[] = maxlength.test

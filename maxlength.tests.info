@@ -1,0 +1,6 @@
+[MaxlengthTestCase]
+name = Test maxlength module
+description = Tests the different features of the maxlength module.
+group = Maxlength
+file = maxlength.test
+

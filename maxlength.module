@@ -47,13 +47,13 @@ function maxlength_element_info_alter(&$cache) {
  * Pre render function to set maxlength attributes.
  */
 function maxlength_pre_render($element) {
-  if (((isset($element['#maxlength']) && $element['#maxlength'] > 0) ||(isset($element['#attributes']['maxlength']) && $element['#attributes']['maxlength'] > 0)) &&
+  if (((isset($element['#maxlength']) && $element['#maxlength'] > 0) || (isset($element['#attributes']['maxlength']) && $element['#attributes']['maxlength'] > 0)) &&
         isset($element['#maxlength_js']) && $element['#maxlength_js'] === TRUE) {
     if ($element['#type'] == 'textarea' && !isset($element['#attributes']['maxlength'])) {
       $element['#attributes']['maxlength'] = $element['#maxlength'];
     }
     $element['#attributes']['class'][] = 'maxlength';
-    $element['#attached']['js'][] = drupal_get_path('module', 'maxlength') . '/js/maxlength.js';
+    $element['#attached']['js'][] = backdrop_get_path('module', 'maxlength') . '/js/maxlength.js';
   }
   return $element;
 }
@@ -147,6 +147,16 @@ function maxlength_field_attach_form($entity_type, $entity, &$form, &$form_state
 }
 
 /**
+ * Implements hook_config_info().
+ */
+function maxlength_config_info() {
+  $prefixes['maxlength.settings'] = array(
+    'label' => t('Module name settings'),
+    'group' => t('Configuration'),
+  );
+}
+
+/**
  * Recursively add the #maxlength_js and #maxlength properties to the elements
  * of a form.
  *
@@ -160,14 +170,14 @@ function maxlength_field_attach_form($entity_type, $entity, &$form, &$form_state
  *   should be set, with the field_name as a key and the field_data as the value.
  */
 function _maxlength_children(&$element, $ms_elements) {
-  $bypass = &drupal_static(__FUNCTION__);
+  $bypass = &backdrop_static(__FUNCTION__);
   // Add "$conf['maxlength_always_for_uid1'] = TRUE;" to settings.php to activate
   // for user #1.
   if (isset($bypass) && $bypass) {
     return;
   }
   elseif (!isset($bypass)) {
-    $bypass = $GLOBALS['user']->uid == 1 ? !variable_get('maxlength_always_for_uid1', FALSE) : user_access('bypass maxlength');
+    $bypass = $GLOBALS['user']->uid == 1 ? !config_get('maxlength.settings', 'maxlength_always_for_uid1') : user_access('bypass maxlength');
   }
 
   $children = element_get_visible_children($element);
@@ -187,7 +197,7 @@ function _maxlength_children(&$element, $ms_elements) {
       }
 
       if (isset($element[$child]['summary']) && isset($settings['maxlength_js_summary'])
-        && $settings['maxlength_js_summary'] > 0) {
+          && $settings['maxlength_js_summary'] > 0) {
         _maxlength_add_maxlength_attributes($element[$child]['summary'], $settings, '_summary');
       }
     }
@@ -237,9 +247,9 @@ function maxlength_validate_input(&$element, &$form_state) {
     // the "enter" characters as only one character.
     $value = filter_xss(str_replace(array("\r\n", '&nbsp;'), array(' ', ' '), $element['#value']), array());
     $value = strip_tags($value);
-    $value = preg_replace("/&#?[a-z0-9]+;/i","1",$value);
-    if (drupal_strlen($value) > $element['#attributes']['maxlength']) {
-      form_error($element, t('!name cannot be longer than %max characters but is currently %length characters long.', array('!name' => empty($element['#title']) ? $element['#parents'][0] : $element['#title'], '%max' => $element['#attributes']['maxlength'], '%length' => drupal_strlen($value))));
+    $value = preg_replace("/&#?[a-z0-9]+;/i", "1", $value);
+    if (backdrop_strlen($value) > $element['#attributes']['maxlength']) {
+      form_error($element, t('!name cannot be longer than %max characters but is currently %length characters long.', array('!name' => empty($element['#title']) ? $element['#parents'][0] : $element['#title'], '%max' => $element['#attributes']['maxlength'], '%length' => backdrop_strlen($value))));
     }
     // Giving the element back the #maxlength, maybe some other modules requires it.
     $element['#maxlength'] = $element['#attributes']['maxlength'];
@@ -250,14 +260,15 @@ function maxlength_validate_input(&$element, &$form_state) {
  * Implements hook_form_alter().
  */
 function maxlength_form_alter(&$form, &$form_state, $form_id) {
+  $config = config('maxlength.settings');
   // Attach maxlength to node title.
-  if (isset($form['#node']) && strpos($form_id, '_node_form') !== FALSE && variable_get('maxlength_js_' . $form['#node']->type, FALSE)) {
+  if (isset($form['#node']) && strpos($form_id, '_node_form') !== FALSE && $config->get('maxlength_js_' . $form['#node']->type)) {
     if (!module_exists('title') || title_field_replacement_enabled('node', $form['#node']->type, 'title') !== TRUE) {
       $form['title']['#maxlength_js'] = TRUE;
-      $form['title']['#maxlength'] = intval(variable_get('maxlength_js_' . $form['#node']->type, ''));
+      $form['title']['#maxlength'] = intval($config->get('maxlength_js_' . $form['#node']->type));
 
       $form['title']['#attributes']['maxlength_js_label'] = array();
-      $maxlength_js_label = t(variable_get('maxlength_js_label_' . $form['#node']->type, MAXLENGTH_DEFAULT_JS_LABEL));
+      $maxlength_js_label = t($config->get('maxlength_js_label_' . $form['#node']->type));
       $form['title']['#attributes']['maxlength_js_label'][] = $maxlength_js_label;
       maxlength_pre_render($form['title']);
     }
@@ -268,6 +279,7 @@ function maxlength_form_alter(&$form, &$form_state, $form_id) {
  * Implements hook_form_node_type_alter().
  */
 function maxlength_form_node_type_form_alter(&$form, &$form_state, $form_id) {
+  $config = config('maxlength.settings');
   $type = $form['#node_type']->type;
   // If the Title Module is enabled and the Title Field is Replaced the maxlength Module
   // we don't need this functionality any more, because the title is now a field itself.
@@ -277,21 +289,21 @@ function maxlength_form_node_type_form_alter(&$form, &$form_state, $form_id) {
       '#type' => 'textfield',
       '#title' => 'Maxlength JS',
       '#description' => t('The maximum length of the field in characters. Can be maximum 255 characters.'),
-      '#default_value' => variable_get('maxlength_js_' . $form['#node_type']->type, ''),
+      '#default_value' => $config->get('maxlength_js_' . $form['#node_type']->type),
       '#element_validate' => array('maxlength_node_title_validate'),
     );
     $form['submission']['maxlength_js_label'] = array(
       '#type' => 'textarea',
       '#rows' => 2,
       '#title' => t('Count down message'),
-      '#default_value' => variable_get('maxlength_js_label_' . $form['#node_type']->type, MAXLENGTH_DEFAULT_JS_LABEL),
+      '#default_value' => $config->get('maxlength_js_label_' . $form['#node_type']->type),
       '#description' => t('The text used in the Javascript message under the input, where "@limit", "@remaining" and "@count" are replaced by the appropriate numbers.'),
     );
   }
 }
 
 /**
- * Checks if the title field of the node is not set to more then 255 chars, because Drupal Core cannot handle this.
+ * Checks if the title field of the node is not set to more then 255 chars, because Backdrop Core cannot handle this.
  */
 function maxlength_node_title_validate($element, &$form_state, $form) {
   if (!empty($element['#value']) && !is_numeric($element['#value'])) {
@@ -300,4 +312,12 @@ function maxlength_node_title_validate($element, &$form_state, $form) {
   if (!empty($element['#value']) && is_numeric($element['#value']) && $element['#value'] > 255) {
     form_error($element, t('Note titles can be maximum 255 characters long.'));
   }
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function maxlength_autoload_info() {
+  return array(
+  );
 }

@@ -4,16 +4,16 @@
   var ml = ml || {};
   ml.options = ml.options || {};
 
-  Drupal.behaviors.maxlength = {
+  Backdrop.behaviors.maxlength = {
     attach: function(context, settings) {
 
-      if (Drupal.wysiwyg != undefined) {
-        $.each(Drupal.wysiwyg.editor.init, function(editor) {
+      if (Backdrop.wysiwyg != undefined) {
+        $.each(Backdrop.wysiwyg.editor.init, function(editor) {
           if (typeof ml[editor] == 'function') {
             ml[editor]();
           }
         });
-      } else if (Drupal.settings.ckeditor != undefined && typeof(CKEDITOR) != 'undefined') {
+      } else if (Backdrop.settings.ckeditor != undefined && typeof(CKEDITOR) != 'undefined') {
         ml.ckeditor();
       }
 
@@ -249,7 +249,7 @@
       counterElement: 'div',
       cssWarning: 'messages warning',
       cssExceeded: 'error',
-      counterText: Drupal.t('Content limited to @limit characters, remaining: <strong>@remaining</strong>'),
+      counterText: Backdrop.t('Content limited to @limit characters, remaining: <strong>@remaining</strong>'),
       action: 'attach',
       enforce: false,
       truncateHtml: false
