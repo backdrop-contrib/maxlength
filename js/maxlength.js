@@ -7,13 +7,7 @@
   Backdrop.behaviors.maxlength = {
     attach: function(context, settings) {
 
-      if (Backdrop.wysiwyg != undefined) {
-        $.each(Backdrop.wysiwyg.editor.init, function(editor) {
-          if (typeof ml[editor] == 'function') {
-            ml[editor]();
-          }
-        });
-      } else if (Backdrop.settings.ckeditor != undefined && typeof(CKEDITOR) != 'undefined') {
+      if (Backdrop.editors.ckeditor != undefined && typeof(CKEDITOR) != 'undefined') {
         ml.ckeditor();
       }
 

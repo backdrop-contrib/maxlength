@@ -8,18 +8,6 @@
 define('MAXLENGTH_DEFAULT_JS_LABEL', 'Content limited to @limit characters, remaining: <strong>@remaining</strong>');
 
 /**
- * Implements hook_help().
- */
-function maxlength_help($path, $arg) {
-  switch ($path) {
-    case 'admin/help#maxlength':
-      $output = '<p>' . t('Maxlength creates a new Form Property: #maxlength_js which in conjunction with #maxlength will enforce, via JavaScript, the maxlength of a textfield or textarea and will show the number of characters left.') . '</p>';
-      $output .= '<p>' . t('Using the field setting page, you can limit textfields and textareas. For textfields this module will use the "<strong>Maximum length</strong>" value set in the <strong>field settings</strong>.') . '</p>';
-      return $output;
-  }
-}
-
-/**
  * Implements hook_permission().
  */
 function maxlength_permission() {
