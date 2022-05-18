@@ -139,9 +139,10 @@ function maxlength_field_attach_form($entity_type, $entity, &$form, &$form_state
  */
 function maxlength_config_info() {
   $prefixes['maxlength.settings'] = array(
-    'label' => t('Module name settings'),
+    'label' => t('MaxLength settings'),
     'group' => t('Configuration'),
   );
+  return $prefixes;
 }
 
 /**
